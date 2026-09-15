@@ -24,6 +24,7 @@ describe('ProductDetail', () => {
   it('should show loading state initially', () => {
     productService.getProductById.mockImplementation(() => new Promise(() => {}));
     
+    window.history.pushState({}, '', '/products/1');
     renderWithRouter(<ProductDetail />);
     
     expect(screen.getByRole('status')).toBeInTheDocument();
@@ -39,12 +40,13 @@ describe('ProductDetail', () => {
       images: ['test-image.jpg'],
     };
     productService.getProductById.mockResolvedValue(mockProduct);
-    
+
     window.history.pushState({}, '', '/products/1');
     renderWithRouter(<ProductDetail />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      // Use getAllByText since "Test Product" appears in both breadcrumb and h1
+      expect(screen.getAllByText('Test Product')).toHaveLength(2);
       expect(screen.getByText('Test description')).toBeInTheDocument();
       expect(screen.getByText('$12.990')).toBeInTheDocument();
       expect(screen.getByText('tag1')).toBeInTheDocument();
@@ -103,14 +105,15 @@ describe('ProductDetail', () => {
       images: ['test-image.jpg'],
     };
     productService.getProductById.mockResolvedValue(mockProduct);
-    
+
     window.history.pushState({}, '', '/products/1');
     renderWithRouter(<ProductDetail />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Inicio')).toBeInTheDocument();
       expect(screen.getByText('Catálogo')).toBeInTheDocument();
-      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      // Use getAllByText since "Test Product" appears in both breadcrumb and h1
+      expect(screen.getAllByText('Test Product')).toHaveLength(2);
     });
   });
 
