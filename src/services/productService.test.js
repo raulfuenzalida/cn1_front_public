@@ -26,7 +26,7 @@ describe('productService', () => {
 
       const result = await productService.getProducts();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/obtener');
       expect(result).toEqual(mockResponse);
     });
 
@@ -42,7 +42,7 @@ describe('productService', () => {
 
       const result = await productService.getProducts({ page: 0, size: 10 });
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products?page=0&size=10');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/obtener?page=0&size=10');
       expect(result).toEqual(mockResponse);
     });
 
@@ -65,7 +65,7 @@ describe('productService', () => {
 
       expect(apiClient.get).toHaveBeenCalled();
       const callArgs = apiClient.get.mock.calls[0][0];
-      expect(callArgs).toContain('/api/v1/products?');
+      expect(callArgs).toContain('/api/v1/products/obtener?');
       expect(callArgs).toContain('name=test');
       expect(callArgs).toContain('minPrice=100');
       expect(callArgs).toContain('maxPrice=1000');
