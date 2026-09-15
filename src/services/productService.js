@@ -24,7 +24,7 @@ export const productService = {
     }
 
     const queryString = queryParams.toString();
-    const endpoint = `/api/v1/products${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/v1/products/obtener${queryString ? `?${queryString}` : ''}`;
     
     return apiClient.get(endpoint);
   },
