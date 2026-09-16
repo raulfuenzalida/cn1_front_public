@@ -30,6 +30,6 @@ export const productService = {
   },
 
   async getProductById(id) {
-    return apiClient.get(`/api/v1/products/${id}`);
+    return apiClient.get(`/api/v1/products/obtener/${id}`);
   },
 };

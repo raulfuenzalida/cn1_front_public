@@ -89,7 +89,7 @@ describe('productService', () => {
 
       const result = await productService.getProductById(1);
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/1');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/obtener/1');
       expect(result).toEqual(mockProduct);
     });
 
