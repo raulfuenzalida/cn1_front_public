@@ -31,9 +31,14 @@ const Home = () => {
         <div className="container">
           <h1>Bienvenido a PrintWorks</h1>
           <p>Tu tienda de impresión 3D de confianza</p>
-          <Link to="/catalog" className="btn btn-light btn-lg">
-            Ver catálogo
-          </Link>
+          <div className="d-flex justify-content-center gap-3 flex-wrap">
+            <Link to="/catalog" className="btn btn-light btn-lg">
+              Ver catálogo
+            </Link>
+            <Link to="/profile" className="btn btn-outline-light btn-lg">
+              Iniciar Sesión / Mi Perfil
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -49,8 +54,21 @@ const Home = () => {
         )}
 
         {error && (
-          <div className="error-message">
-            {error}
+          <div className="alert alert-warning text-center my-4 p-4 shadow-sm rounded" role="alert">
+            <h3 className="h5 mb-2">Microservicio de Productos no disponible (502)</h3>
+            <p className="text-muted small mb-2">{error}</p>
+            <p className="text-muted small mb-3">
+              El microservicio <code>ms_products</code> no está respondiendo en el puerto <code>8081</code>.
+              Aun así, puedes navegar a tu perfil, iniciar sesión o registrarte.
+            </p>
+            <div className="d-flex justify-content-center gap-2">
+              <Link to="/catalog" className="btn btn-outline-secondary btn-sm">
+                Ir al catálogo
+              </Link>
+              <Link to="/profile" className="btn btn-primary btn-sm">
+                Ir a Mi Perfil / Iniciar Sesión
+              </Link>
+            </div>
           </div>
         )}
 

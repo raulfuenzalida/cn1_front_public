@@ -303,3 +303,85 @@ a:hover {
 .breadcrumb-item.active {
   color: var(--text-secondary);
 }
+
+
+/* Cart & Badge Styles */
+.cart-badge {
+  background-color: var(--color-accent-dark);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25em 0.55em;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.cart-nav-btn, .profile-nav-btn {
+  color: var(--text-primary) !important;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.cart-nav-btn:hover, .profile-nav-btn:hover {
+  color: var(--color-accent) !important;
+}
+
+.quantity-control button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-weight: bold;
+}
+
+/* Profile and Cart Cards */
+.profile-card, .cart-summary-card, .order-confirmation-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.auth-required-box {
+  background-color: var(--hover-bg);
+  border: 1px dashed var(--border-color);
+}
+
+.order-details-box {
+  background-color: var(--hover-bg) !important;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.ms-login-btn {
+  font-weight: 600;
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table-light {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table-light th {
+  background-color: #222222;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .list-group-item {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.login-form-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}

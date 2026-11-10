@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatUtils';
+import { useCart } from '../../context/CartContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [addedMessage, setAddedMessage] = useState(false);
+
+  let addToCart = () => {};
+  try {
+    const cart = useCart();
+    if (cart?.addToCart) {
+      addToCart = cart.addToCart;
+    }
+  } catch {
+    // Fallback si se renderiza fuera de CartProvider
+  }
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -26,6 +38,17 @@ const ProductDetail = () => {
 
     fetchProduct();
   }, [id]);
+
+  const handleQuantityChange = (delta) => {
+    setQuantity((prev) => Math.max(1, prev + delta));
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addToCart(product, quantity);
+    setAddedMessage(true);
+    setTimeout(() => setAddedMessage(false), 3000);
+  };
 
   if (loading) {
     return (
@@ -148,8 +171,65 @@ const ProductDetail = () => {
             <p className="text-muted">{description}</p>
           </div>
 
+          {/* Selector de cantidad y adición al carrito */}
+          <div className="card p-3 mb-4 cart-action-card">
+            <div className="d-flex align-items-center gap-3 mb-3">
+              <label htmlFor="detail-quantity" className="form-label mb-0 fw-semibold">
+                Cantidad:
+              </label>
+              <div className="d-flex align-items-center quantity-control">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                  aria-label="Disminuir cantidad"
+                >
+                  -
+                </button>
+                <input
+                  id="detail-quantity"
+                  type="number"
+                  min="1"
+                  className="form-control form-control-sm text-center mx-2"
+                  style={{ width: '60px' }}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  aria-label="Cantidad seleccionada"
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => handleQuantityChange(1)}
+                  aria-label="Aumentar cantidad"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-primary flex-grow-1"
+                onClick={handleAddToCart}
+              >
+                Agregar al carrito
+              </button>
+              <Link to="/cart" className="btn btn-outline-primary">
+                Ver carrito
+              </Link>
+            </div>
+
+            {addedMessage && (
+              <div className="alert alert-success mt-3 mb-0 py-2" role="status">
+                ✓ {quantity} {quantity === 1 ? 'producto agregado' : 'productos agregados'} al carrito.
+              </div>
+            )}
+          </div>
+
           <div className="d-flex gap-2">
-            <Link to="/catalog" className="btn btn-outline-primary">
+            <Link to="/catalog" className="btn btn-outline-secondary">
               Volver al catálogo
             </Link>
           </div>
