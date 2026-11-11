@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { orderService } from './orderService';
-import { apiClient } from './apiClient';
+import { orderService } from '../services/orderService';
+import { apiClient } from '../services/apiClient';
 
 vi.mock('./apiClient', () => ({
   apiClient: {

@@ -18,11 +18,13 @@ const LoginForm = ({
   const [infoMessage, setInfoMessage] = useState(null);
   const [isResending, setIsResending] = useState(false);
   const [showConfirmAction, setShowConfirmAction] = useState(false);
+  const [showRegisterAction, setShowRegisterAction] = useState(false);
 
   const resetMessages = () => {
     setErrorMessage(null);
     setInfoMessage(null);
     setShowConfirmAction(false);
+    setShowRegisterAction(false);
   };
 
   const switchMode = (newMode) => {
@@ -40,6 +42,13 @@ const LoginForm = ({
       setErrorMessage('Ingresa tu correo electrónico');
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMessage('Ingresa un correo electrónico con formato válido (ej. usuario@ejemplo.com)');
+      return;
+    }
+
     if (!password) {
       setErrorMessage('Ingresa tu contraseña');
       return;
@@ -61,7 +70,21 @@ const LoginForm = ({
         setInfoMessage('Tu cuenta aún no está confirmada. Ingresa el código de 6 dígitos enviado a tu correo o haz clic en "Reenviar código".');
         return;
       }
-      setErrorMessage(err.message || 'Error al autenticarse en AWS Cognito');
+
+      // Si el usuario no está registrado, sugerimos crear una cuenta
+      const isUserNotFound =
+        err.type?.includes('UserNotFoundException') ||
+        err.raw?.__type?.includes('UserNotFoundException') ||
+        err.message?.includes('no está registrado') ||
+        err.message?.includes('User does not exist');
+
+      if (isUserNotFound) {
+        setErrorMessage(err.message || 'El usuario no está registrado en el sistema.');
+        setShowRegisterAction(true);
+        return;
+      }
+
+      setErrorMessage(err.message || 'Error al iniciar sesión en AWS Cognito');
     }
   };
 
@@ -268,6 +291,23 @@ const LoginForm = ({
             }}
           >
             Ingresar Código de Verificación →
+          </button>
+        </div>
+      )}
+
+      {showRegisterAction && (
+        <div className="alert alert-warning py-2 small mb-3 text-center">
+          <p className="mb-2 fw-semibold">¿No tienes una cuenta registrada aún?</p>
+          <button
+            type="button"
+            className="btn btn-dark btn-sm fw-semibold w-100"
+            onClick={() => {
+              resetMessages();
+              setMode('register');
+              setInfoMessage(`Completa tus datos para crear una nueva cuenta con ${email}.`);
+            }}
+          >
+            Crear una Cuenta Nueva →
           </button>
         </div>
       )}

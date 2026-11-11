@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cognitoService, parseJwt, computeSecretHash } from './cognitoService';
+import { cognitoService, parseJwt, computeSecretHash } from '../services/cognitoService';
 
 describe('cognitoService', () => {
   beforeEach(() => {
@@ -120,6 +120,42 @@ describe('cognitoService', () => {
       await expect(
         cognitoService.loginWithEmailAndPassword('user@test.cl', 'Pass123!')
       ).rejects.toThrow('El flujo USER_PASSWORD_AUTH no está habilitado');
+    });
+
+    it('should throw validation error when email is empty', async () => {
+      await expect(
+        cognitoService.loginWithEmailAndPassword('', 'password123')
+      ).rejects.toThrow('Por favor ingresa tu correo electrónico.');
+    });
+
+    it('should throw validation error when password is empty', async () => {
+      await expect(
+        cognitoService.loginWithEmailAndPassword('user@test.cl', '')
+      ).rejects.toThrow('Por favor ingresa tu contraseña.');
+    });
+
+    it('should handle TooManyFailedAttemptsException when password attempts are exceeded', async () => {
+      const mockErrorResponse = {
+        __type: 'TooManyFailedAttemptsException',
+        message: 'Password attempts exceeded',
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => mockErrorResponse,
+      });
+
+      await expect(
+        cognitoService.loginWithEmailAndPassword('user@test.cl', 'wrongpass')
+      ).rejects.toThrow('Has superado el número máximo de intentos fallidos');
+    });
+
+    it('should handle network connection errors gracefully', async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+      await expect(
+        cognitoService.loginWithEmailAndPassword('user@test.cl', 'Pass123!')
+      ).rejects.toThrow('No se pudo establecer conexión con el servidor de autenticación');
     });
   });
 

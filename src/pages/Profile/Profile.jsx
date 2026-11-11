@@ -47,14 +47,14 @@ const Profile = ({ initialMode }) => {
                   ? 'Ingresa el código de 6 dígitos que llegó a tu correo para activar tu cuenta de cliente.'
                   : defaultMode === 'register'
                   ? 'Crea tu cuenta con tu correo y contraseña para comprar en PrintWorks.'
-                  : 'Inicia sesión con tu correo electrónico registrado en AWS Cognito para acceder a tu perfil, ver tus roles asignados y completar tus pedidos.'}
+                  : 'Inicia sesión con tu correo electrónico registrado para acceder a tu perfil y completar tus pedidos.'}
               </p>
             </div>
 
             <LoginForm
               defaultMode={defaultMode}
               title="Iniciar Sesión"
-              subtitle="Autenticación con email en AWS Cognito"
+              subtitle="Autenticación con correo electrónico"
             />
 
             <div className="text-center mt-4">
@@ -75,7 +75,7 @@ const Profile = ({ initialMode }) => {
           <div className="card shadow-sm profile-card">
             <div className="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
               <h2 className="h4 mb-0">Perfil de Usuario</h2>
-              <span className="badge bg-success">Conectado con AWS Cognito</span>
+              <span className="badge bg-success">Conectado</span>
             </div>
 
             <div className="card-body p-4">
@@ -95,7 +95,9 @@ const Profile = ({ initialMode }) => {
                 </div>
                 <div>
                   <h3 className="h5 mb-1">{user?.email || 'Usuario'}</h3>
-                  <p className="text-muted mb-0 small">ID: {user?.sub || '-'}</p>
+                  <span className="badge bg-success-subtle text-success border border-success-subtle">
+                    ● Conectado
+                  </span>
                 </div>
               </div>
 
@@ -105,40 +107,20 @@ const Profile = ({ initialMode }) => {
                 <h4 className="h6 text-muted text-uppercase mb-3">Información de la Cuenta</h4>
                 <div className="list-group list-group-flush">
                   <div className="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Correo Electrónico (Auth)</span>
+                    <span className="text-muted">Correo Electrónico</span>
                     <span className="fw-semibold">{user?.email || '-'}</span>
                   </div>
                   <div className="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center">
-                    <span className="text-muted">User Pool ID</span>
-                    <span className="fw-semibold">{user?.userPoolId || 'us-east-1_KtdUxURf6'}</span>
+                    <span className="text-muted">Estado</span>
+                    <span className="badge bg-success">Conectado</span>
                   </div>
-                  <div className="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center">
-                    <span className="text-muted">User Sub (UUID)</span>
-                    <span className="text-truncate fw-semibold" style={{ maxWidth: '280px' }}>
-                      {user?.sub || '-'}
-                    </span>
-                  </div>
+                  {roles && roles.length > 0 && (
+                    <div className="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Rol</span>
+                      <span className="fw-semibold">{roles.join(', ')}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="h6 text-muted text-uppercase mb-2">Roles / Grupos Asignados (AWS Cognito)</h4>
-                {roles && roles.length > 0 ? (
-                  <div className="d-flex flex-wrap gap-2">
-                    {roles.map((role, idx) => (
-                      <span key={idx} className="badge bg-primary px-3 py-2 fs-6">
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="alert alert-secondary py-2 mb-0" role="alert">
-                    <small>
-                      No se encontraron grupos asociados en el token (claim <code>cognito:groups</code>).
-                      Para asignarle un rol a este usuario, agrégalo al grupo <strong>usuarios</strong> en la consola de AWS Cognito.
-                    </small>
-                  </div>
-                )}
               </div>
 
               <div className="d-flex flex-wrap gap-2 justify-content-between pt-3 border-top">

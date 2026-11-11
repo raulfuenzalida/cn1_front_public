@@ -63,7 +63,26 @@ export const cognitoService = {
    * Inicia sesión con Email y Contraseña directamente contra AWS Cognito.
    */
   async loginWithEmailAndPassword(email, password) {
-    const { region, clientId, clientSecret } = cognitoConfig;
+    const { region, clientId, clientSecret, userPoolId } = cognitoConfig;
+
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      const error = new Error('Por favor ingresa tu correo electrónico.');
+      error.type = 'ValidationError';
+      throw error;
+    }
+
+    if (!password || typeof password !== 'string') {
+      const error = new Error('Por favor ingresa tu contraseña.');
+      error.type = 'ValidationError';
+      throw error;
+    }
+
+    if (!clientId || !region) {
+      const error = new Error('Configuración de AWS Cognito incompleta. Revisa las variables en el archivo .env.');
+      error.type = 'ConfigError';
+      throw error;
+    }
+
     const cleanEmail = email.trim();
 
     const authParameters = {
@@ -78,20 +97,34 @@ export const cognitoService = {
 
     const endpoint = `https://cognito-idp.${region}.amazonaws.com/`;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-amz-json-1.1',
-        'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
-      },
-      body: JSON.stringify({
-        AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: clientId,
-        AuthParameters: authParameters,
-      }),
-    });
+    let response;
+    let data;
 
-    const data = await response.json();
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+        },
+        body: JSON.stringify({
+          AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: clientId,
+          AuthParameters: authParameters,
+        }),
+      });
+
+      data = await response.json();
+    } catch (networkError) {
+      if (networkError.type === 'ValidationError' || networkError.type === 'ConfigError') {
+        throw networkError;
+      }
+      console.error('Error de conexión con AWS Cognito:', networkError);
+      const error = new Error('No se pudo establecer conexión con el servidor de autenticación. Verifica tu conexión a internet.');
+      error.type = 'NetworkError';
+      error.cause = networkError;
+      throw error;
+    }
 
     if (!response.ok) {
       console.error('AWS Cognito InitiateAuth error response:', data);
@@ -100,12 +133,34 @@ export const cognitoService = {
       let friendlyMessage = rawMessage || 'Error al iniciar sesión en AWS Cognito.';
 
       if (rawMessage.includes('USER_PASSWORD_AUTH') || rawMessage.includes('flow not enabled')) {
-        friendlyMessage = 'El flujo USER_PASSWORD_AUTH no está habilitado en el App Client de Cognito. Ve a AWS Console > User Pool (us-east-1_KtdUxURf6) > App integration > Clientes de aplicación (5r7v7nnaqhkjp8gs5muaovked2) > Authentication flows y activa ALLOW_USER_PASSWORD_AUTH.';
-      } else if (errorType.includes('NotAuthorizedException')) {
-        friendlyMessage = 'Correo o contraseña incorrectos.';
-      } else if (errorType.includes('UserNotFoundException')) {
-        friendlyMessage = 'El usuario no está registrado.';
-      } else if (errorType.includes('UserNotConfirmedException')) {
+        friendlyMessage = `El flujo USER_PASSWORD_AUTH no está habilitado en el App Client de Cognito. Ve a AWS Console > User Pool (${userPoolId || 'tu-user-pool'}) > App integration > Clientes de aplicación (${clientId || 'tu-client-id'}) > Authentication flows y activa ALLOW_USER_PASSWORD_AUTH.`;
+      } else if (
+        errorType.includes('TooManyFailedAttemptsException') ||
+        rawMessage.includes('Password attempts exceeded') ||
+        rawMessage.includes('exceeded')
+      ) {
+        friendlyMessage = 'Has superado el número máximo de intentos fallidos. Por seguridad, tu cuenta ha sido bloqueada temporalmente. Inténtalo más tarde.';
+      } else if (
+        errorType.includes('TooManyRequestsException') ||
+        rawMessage.includes('Too many requests')
+      ) {
+        friendlyMessage = 'Demasiadas solicitudes al servicio de autenticación. Por favor espera unos momentos antes de volver a intentar.';
+      } else if (errorType.includes('PasswordResetRequiredException')) {
+        friendlyMessage = 'Tu contraseña ha expirado o requiere ser restablecida antes de iniciar sesión.';
+      } else if (
+        errorType.includes('UserNotFoundException') ||
+        rawMessage.includes('User does not exist')
+      ) {
+        friendlyMessage = 'El usuario no está registrado. Verifica el correo ingresado o crea una nueva cuenta.';
+      } else if (
+        errorType.includes('NotAuthorizedException') ||
+        rawMessage.includes('Incorrect username or password')
+      ) {
+        friendlyMessage = 'Correo o contraseña incorrectos. Verifica que tus datos sean correctos e intenta nuevamente.';
+      } else if (
+        errorType.includes('UserNotConfirmedException') ||
+        rawMessage.includes('User is not confirmed')
+      ) {
         friendlyMessage = 'El usuario aún no ha confirmado su correo electrónico en Cognito.';
       } else if (errorType.includes('InvalidParameterException')) {
         friendlyMessage = rawMessage || 'Por favor verifica el formato del correo y contraseña.';

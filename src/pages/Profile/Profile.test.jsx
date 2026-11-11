@@ -41,7 +41,7 @@ describe('Profile', () => {
     expect(mockLogin).toHaveBeenCalledWith('cliente@printworks.cl', 'password123');
   });
 
-  it('should show profile details, email and roles when user is logged in with Cognito', () => {
+  it('should show basic profile details, email and connected status when user is logged in', () => {
     const mockLogout = vi.fn();
     vi.spyOn(AuthContextModule, 'useAuth').mockReturnValue({
       isAuthenticated: true,
@@ -65,10 +65,15 @@ describe('Profile', () => {
     );
 
     expect(screen.getByText('Perfil de Usuario')).toBeInTheDocument();
-    expect(screen.getByText('Conectado con AWS Cognito')).toBeInTheDocument();
+    expect(screen.getAllByText('Conectado').length).toBeGreaterThan(0);
     expect(screen.getAllByText('carlos@printworks.cl')).toHaveLength(2);
-    expect(screen.getByText('us-east-1_KtdUxURf6')).toBeInTheDocument();
-    expect(screen.getByText('usuarios')).toBeInTheDocument();
+    // Verificar que los datos técnicos de Cognito ya no se muestran
+    expect(screen.queryByText('us-east-1_KtdUxURf6')).not.toBeInTheDocument();
+    expect(screen.queryByText('cognito-sub-1234')).not.toBeInTheDocument();
+    expect(screen.queryByText(/User Sub/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/User Pool ID/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Roles \/ Grupos Asignados/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No se encontraron grupos asociados en el token/i)).not.toBeInTheDocument();
 
     const logoutBtn = screen.getByRole('button', { name: /Cerrar Sesión/i });
     expect(logoutBtn).toBeInTheDocument();

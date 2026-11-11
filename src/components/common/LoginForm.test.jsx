@@ -209,4 +209,64 @@ describe('LoginForm', () => {
       expect(screen.getByDisplayValue('no_confirmado@printworks.cl')).toBeInTheDocument();
     });
   });
+
+  it('should validate email format before attempting login', () => {
+    const mockLogin = vi.fn();
+    vi.spyOn(AuthContextModule, 'useAuth').mockReturnValue({
+      login: mockLogin,
+      signUp: vi.fn(),
+      confirmSignUp: vi.fn(),
+      resendConfirmationCode: vi.fn(),
+      loading: false,
+    });
+
+    render(<LoginForm defaultMode="login" />);
+
+    fireEvent.change(screen.getByLabelText(/Correo Electrónico:/i), {
+      target: { value: 'correo-invalido-sin-arroba' },
+    });
+    fireEvent.change(screen.getByLabelText(/^Contraseña:/i), {
+      target: { value: 'Pass123456!' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }));
+
+    expect(screen.getByText(/Ingresa un correo electrónico con formato válido/i)).toBeInTheDocument();
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it('should show register shortcut button when user is not registered on login', async () => {
+    const error = new Error('El usuario ingresado no está registrado.');
+    error.type = 'UserNotFoundException';
+    const mockLogin = vi.fn().mockRejectedValue(error);
+
+    vi.spyOn(AuthContextModule, 'useAuth').mockReturnValue({
+      login: mockLogin,
+      signUp: vi.fn(),
+      confirmSignUp: vi.fn(),
+      resendConfirmationCode: vi.fn(),
+      loading: false,
+    });
+
+    render(<LoginForm defaultMode="login" />);
+
+    fireEvent.change(screen.getByLabelText(/Correo Electrónico:/i), {
+      target: { value: 'desconocido@printworks.cl' },
+    });
+    fireEvent.change(screen.getByLabelText(/^Contraseña:/i), {
+      target: { value: 'Pass123456!' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/El usuario ingresado no está registrado/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Crear una Cuenta Nueva →/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Crear una Cuenta Nueva →/i }));
+
+    expect(screen.getByText('Crear Cuenta de Cliente')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('desconocido@printworks.cl')).toBeInTheDocument();
+  });
 });
