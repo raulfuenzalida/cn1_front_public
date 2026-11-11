@@ -1,346 +1,210 @@
 # PrintWorks - Frontend Público
 
-Frontend público de PrintWorks para visualizar el catálogo de productos disponibles. Este proyecto consume exclusivamente los endpoints públicos existentes de `cn1_ms_products` a través de API Gateway.
+Frontend público de **PrintWorks** para visualizar el catálogo de productos disponibles, gestionar el carrito de compras y realizar simulaciones de pedidos integradas con `cn1_ms_orders` y autenticación mediante **AWS Cognito**.
 
-## Objetivo
+---
 
-Proporcionar una interfaz web pública y moderna que permita a los clientes explorar el catálogo de productos de impresión 3D de PrintWorks, con visualización de productos, filtrado, paginación y navegación detallada.
+## 🎯 Objetivo
 
-## Tecnologías
+Proporcionar una interfaz web pública y moderna que permita a los clientes:
+- Explorar el catálogo de productos de impresión 3D de PrintWorks sin necesidad de iniciar sesión.
+- Gestionar un carrito de compras interactivo con persistencia local (`localStorage`) e indicador numérico reactivo en el Navbar.
+- Registrarse como nuevo cliente (`SignUp`) e ingresar el código de verificación por correo (`ConfirmSignUp`) con **inicio de sesión automático e inmediato** (sin redirecciones innecesarias).
+- Consultar su perfil de usuario (`/profile`), visualizando su estado de autenticación, User Pool ID, User Sub y los roles asignados por AWS Cognito (`cognito:groups`, ej. grupo `usuarios`).
+- Autenticarse mediante AWS Cognito (utilizando directamente **Email y Contraseña** con cálculo nativo de `SECRET_HASH`) para completar la simulación de compra, enviando la orden a `cn1_ms_orders` (`POST /api/v1/orders/crear`) con su Bearer Token y descargando su comprobante PDF oficial.
 
-- **React 19.2.8** - Framework de JavaScript para construir interfaces de usuario
-- **Vite 8.3.0** - Herramienta de build y desarrollo rápida
-- **JavaScript** - Lenguaje de programación principal
-- **React Router 7.18.3** - Enrutamiento client-side con HashRouter para GitHub Pages
-- **Bootstrap 5.3.8** - Framework CSS para diseño responsive
-- **CSS Variables** - Sistema de temas light/dark
-- **Vitest 5.0.0** - Framework de testing
-- **React Testing Library 16.3.3** - Testing de componentes React
+---
 
-## Arquitectura
+## 🛠️ Tecnologías
 
-El proyecto sigue una estructura feature-first organizada:
+- **React 19.2.8** - Biblioteca de JavaScript para interfaces de usuario modernas.
+- **Vite 8.3.0** - Bundler y servidor de desarrollo ultrarrápido con proxy inverso.
+- **Web Crypto API (SubtleCrypto)** - Cálculo nativo de `SECRET_HASH` con HMAC-SHA256 para clientes Cognito sin librerías externas pesadas.
+- **React Router 7.18.3** - Enrutamiento client-side con HashRouter para compatibilidad total con GitHub Pages y servidores estáticos.
+- **Bootstrap 5.3.8** - Framework CSS responsive y componentes accesibles.
+- **CSS Variables** - Sistema integral de temas Light/Dark mode.
+- **Vitest 5.0.0** - Framework de testing unitario y de integración veloz.
+- **React Testing Library 16.3.3** - Testing de componentes enfocado en el usuario.
 
-```
+---
+
+## 🏗️ Arquitectura del Proyecto
+
+```text
 src/
-├── assets/              # Archivos estáticos
-├── components/          # Componentes React
-│   ├── common/         # Componentes reutilizables (Navbar, Footer)
-│   ├── layout/         # Componentes de layout (MainLayout)
-│   └── products/       # Componentes específicos de productos (ProductCard)
+├── assets/              # Archivos estáticos e imágenes
+├── components/          # Componentes reutilizables
+│   ├── common/         # Navbar, Footer, LoginForm (AWS Cognito con email, registro y verificación)
+│   ├── layout/         # MainLayout
+│   └── products/       # ProductCard (con selector de cantidad y botón "+ Carro")
 ├── config/             # Configuraciones
-├── context/            # Contextos React (ThemeContext)
-├── layouts/            # Layouts principales
-├── pages/              # Páginas de la aplicación
-│   ├── Home/          # Página de inicio
-│   ├── Catalog/       # Catálogo de productos
-│   ├── ProductDetail/ # Detalle de producto
+│   └── cognitoConfig.js# Configuración de AWS Cognito (User Pool, Client ID, Secret y Rol)
+├── context/            # Contextos globales de React
+│   ├── AuthContext.jsx # Proveedor de autenticación (login, signUp, confirm, auto-login)
+│   ├── CartContext.jsx # Proveedor y persistencia en localStorage del Carrito de Compras
+│   └── ThemeContext.jsx# Proveedor de tema Light/Dark
+├── pages/              # Vistas de la aplicación
+│   ├── Home/          # Inicio con productos destacados y avisos de estado
+│   ├── Catalog/       # Catálogo público con filtros y paginación
+│   ├── ProductDetail/ # Detalle del producto con selector interactivo
+│   ├── Cart/          # Carrito de compras y simulación de compra integrada
+│   ├── Profile/       # Perfil de usuario (login, registro, verificación / datos Cognito)
 │   └── NotFound/      # Página 404
-├── routes/             # Configuración de rutas
+├── routes/             # Rutas: /, /catalog, /products/:id, /cart, /profile, /login, /register, /verify
 ├── services/           # Servicios de API
-│   ├── apiClient.js   # Cliente HTTP centralizado
-│   └── productService.js # Servicio de productos
-├── styles/             # Estilos globales y variables CSS
-├── test/               # Configuración de tests
-├── utils/              # Utilidades (formatPrice)
-├── App.jsx             # Componente principal
-└── main.jsx            # Punto de entrada
+│   ├── apiClient.js    # Cliente HTTP centralizado con manejo de errores y headers
+│   ├── cognitoService.js # Servicio AWS Cognito con HMAC SECRET_HASH, login, signUp y confirm
+│   ├── productService.js # Catálogo público (ms_products)
+│   └── orderService.js   # Creación de pedidos y comprobantes (ms_orders)
+├── styles/             # Variables CSS y diseño PrintWorks
+├── test/               # Configuración y mocks de Vitest
+├── utils/              # Utilidades de formateo (formatPrice en CLP)
+├── App.jsx             # Árbol de proveedores (Theme, Auth, Cart, Router)
+└── main.jsx            # Punto de entrada de la aplicación
 ```
 
-## Instalación
+---
 
-1. Clonar el repositorio
-2. Navegar al directorio del proyecto:
-   ```bash
-   cd cn1_front_public
-   ```
-3. Instalar dependencias:
-   ```bash
-   npm install
-   ```
+## ⚙️ Instalación y Ejecución Local
 
-## Ejecución Local
+### 1. Clonar el repositorio e instalar dependencias:
+```bash
+git clone <url-del-repositorio>
+cd cn1_front_public
+npm install
+```
 
-### Desarrollo
+### 2. Configurar variables de entorno (`.env`):
+Copia `.env.example` a `.env`:
+```env
+# En desarrollo local dejar vacío para usar el proxy de Vite:
+VITE_API_BASE_URL=
 
-Para ejecutar el proyecto en modo desarrollo:
+# Configuración oficial de AWS Cognito:
+VITE_COGNITO_REGION=us-east-1
+VITE_COGNITO_USER_POOL_ID=us-east-1_KtdUxURf6
+VITE_COGNITO_CLIENT_ID=5r7v7nnaqhkjp8gs5muaovked2
+VITE_COGNITO_CLIENT_SECRET=1920g08dn6g6p6bnfe4ol7iqrvkjd55a57aotsqctnmhltkhid4n
+VITE_REQUIRED_ROLE=usuarios
+```
 
+### 3. Iniciar el servidor de desarrollo:
 ```bash
 npm run dev
 ```
+El servidor se iniciará en `http://localhost:5174`.
 
-El servidor de desarrollo se iniciará en `http://localhost:5174`
+### Proxy Local de Vite
+En desarrollo local, Vite redirige automáticamente las peticiones a los microservicios correspondientes:
+- `/api/v1/products` ➔ `http://localhost:8081` (`cn1_ms_products`)
+- `/api/v1/orders` ➔ `http://localhost:8082` (`cn1_ms_orders`)
 
-### Proxy Local
+---
 
-En desarrollo local, el frontend utiliza un proxy de Vite para redirigir las requests de `/api/v1/products` al microservicio `cn1_ms_products` en `http://localhost:8081`.
+## 🔐 Configuración Requerida en AWS Cognito
 
-No es necesario configurar `VITE_API_BASE_URL` en desarrollo local.
+Para que la autenticación directa con email y contraseña funcione correctamente sin Hosted UI, deben cumplirse las siguientes configuraciones en la consola de AWS Cognito:
 
-### Variables de Entorno
+### 1. Habilitar el Flujo `ALLOW_USER_PASSWORD_AUTH` (Obligatorio)
+Por defecto, AWS Cognito deshabilita el flujo de usuario/contraseña directo en nuevos App Clients. Para activarlo:
+1. En **AWS Cognito Console**, entra a tu User Pool: **`User pool - dv-psb`** (`us-east-1_KtdUxURf6`).
+2. Ve a la pestaña **App integration** *(Integración de la aplicación)*.
+3. Baja a **App clients and analytics** *(Clientes de aplicaciones y análisis)* y selecciona tu App Client: **`5r7v7nnaqhkjp8gs5muaovked2`**.
+4. En la sección **Authentication flows** *(Flujos de autenticación)*, haz clic en **Edit** *(Editar)*.
+5. Marca la casilla:
+   - ☑ **`ALLOW_USER_PASSWORD_AUTH`** *(User password-based authentication)*.
+6. Guarda los cambios.
 
-Crear un archivo `.env` en la raíz del proyecto (ya existe un `.env.example` de referencia):
+### 2. Política de Contraseñas de Cognito (5 Factores)
+El User Pool exige de forma estricta los siguientes requisitos:
+- **Mínimo 8 caracteres**.
+- Al menos **1 letra mayúscula** (`A-Z`).
+- Al menos **1 letra minúscula** (`a-z`).
+- Al menos **1 número** (`0-9`).
+- Al menos **1 símbolo especial** (`!@#$%&*...`).
 
-```env
-VITE_API_BASE_URL=
-```
+*La interfaz valida estos 5 requisitos en tiempo real con indicadores visuales antes de enviar el formulario.*
 
-**Desarrollo Local:**
-- Dejar `VITE_API_BASE_URL` vacío para utilizar el proxy de Vite hacia `http://localhost:8081`
+### 3. Asignación del Grupo / Rol (`usuarios`)
+1. En el User Pool, ve a **User management** ➔ **Groups** *(Grupos)*.
+2. Asegúrate de tener creado el grupo **`usuarios`**.
+3. En la pestaña **Users** *(Usuarios)*, selecciona el correo del usuario y haz clic en **Add to group** seleccionando `usuarios`.
+4. Al autenticarse, el token JWT contendrá el claim `"cognito:groups": ["usuarios"]`, el cual se refleja como rol activo en la vista de **Perfil**.
 
-**Producción:**
-- Configurar `VITE_API_BASE_URL=https://1335t86sik.execute-api.us-east-1.amazonaws.com`
+---
 
-## Endpoints Consumidos
+## 🚀 Flujos y Funcionalidades de la Aplicación
 
-Este frontend consume exclusivamente endpoints públicos de `cn1_ms_products`:
+### 🛒 1. Carrito de Compras Interactivo
+- **Badge reactivo en Navbar**: Muestra en tiempo real la cantidad total de unidades seleccionadas.
+- **Agregar desde Catálogo o Detalle**: Botón rápido "+ Carro" y selector de cantidad con botones `+` / `-`.
+- **Persistencia en `localStorage`**: El contenido del carrito se conserva entre recargas de página o reinicio del navegador.
+- **Control de cantidades**: Límite de hasta 30 unidades por ítem, eliminación individual y vaciado con un clic.
+- **Cálculo de subtotales**: Formato oficial de precios en pesos chilenos (CLP).
 
-### Catálogo de Productos
-- **GET** `/api/v1/products`
-- **Parámetros:**
-  - `page` - Número de página (default: 0)
-  - `size` - Tamaño de página (default: 12)
-  - `sort` - Ordenamiento (ej: `finalPrice,asc`, `name,desc`)
-  - `name` - Búsqueda por nombre
-  - `minPrice` - Precio mínimo
-  - `maxPrice` - Precio máximo
-- **Respuesta:** Objeto paginado con:
-  - `content` - Array de productos
-  - `totalElements` - Total de elementos
-  - `totalPages` - Total de páginas
-  - `number` - Página actual
-  - `size` - Tamaño de página
+### 👤 2. Registro, Verificación y Auto-Login sin Fricción
+- **Rutas directas**:
+  - `#/login` o `#/profile`: Formulario de inicio de sesión.
+  - `#/register`: Formulario de registro de nuevo cliente.
+  - `#/verify`: Pantalla directa de confirmación con código de 6 dígitos.
+- **Flujo Fluido**:
+  1. El cliente llena el formulario de registro (`email`, `contraseña`, `confirmar contraseña`).
+  2. Al presionar **Crear Cuenta**, el formulario pasa inmediatamente a la pantalla de **Verificar Correo Electrónico**.
+  3. El cliente ingresa el código de 6 dígitos que llegó a su correo.
+  4. La aplicación ejecuta `confirmSignUp` y realiza **auto-login inmediato** con sus credenciales.
+  5. El usuario queda conectado al instante viendo su perfil o su carrito listo para comprar, **sin volver al login ni requerir escribir su contraseña nuevamente**.
+- **Atajos para cuentas existentes**: Si el usuario intenta registrar un correo ya creado o no confirmado, la app le ofrece un botón directo para verificar el código pendiente o reenviar uno nuevo.
 
-### Detalle de Producto
-- **GET** `/api/v1/products/{id}`
-- **Respuesta:** Objeto producto completo
+### 📦 3. Simulación de Compra hacia `ms_orders`
+- **Requerimiento de Autenticación**: En la vista del carrito (`/cart`), si el cliente no está logueado, se despliega el formulario de login/registro sin perder los productos seleccionados.
+- **Envío con Token de Cognito**:
+  - Obtiene el token oficial (`Bearer <IdToken/AccessToken>`).
+  - Envía la petición a `POST /api/v1/orders/crear` con el header `Authorization`.
+  - **No envía precios** (respetando la regla de negocio de `ms_orders`).
+  - Payload enviado:
+    ```json
+    {
+      "customerName": "Nombre Cliente",
+      "customerEmail": "usuario@printworks.cl",
+      "items": [
+        { "idProduct": 1, "quantity": 2 }
+      ]
+    }
+    ```
+- **Confirmación y Comprobante PDF**:
+  - Al crearse la orden, se vacía el carrito automáticamente.
+  - Se muestra el número visible de pedido (ej. `PW-000001`), estado `CREATED` y total oficial calculado por el backend.
+  - Botón interactivo para **Descargar Comprobante PDF** consumiendo `GET /api/v1/orders/{id}/receipt` con el Token de Cognito.
 
-## Contrato Público de Productos
+---
 
-El frontend trabaja exclusivamente con los campos públicos de `ProductPublicResponse`:
+## 🧪 Pruebas Automatizadas (Vitest)
 
-- `id` - Identificador del producto
-- `name` - Nombre del producto
-- `description` - Descripción del producto
-- `finalPrice` - Precio final (CLP)
-- `tags` - Array de etiquetas
-- `images` - Array de URLs de imágenes
-
-**No se utilizan campos administrativos** como: `status`, `priceStatus`, `idFilament`, `filamentGrams`, `printingHours`, `profitPercentage`, etc.
-
-## Regla de Disponibilidad
-
-El backend (`cn1_ms_products`) garantiza que el catálogo público solo exponga productos con estado `ACTIVE` y `CURRENT`. Por lo tanto, el frontend **no filtra manualmente** estos estados - la fuente de verdad es el microservicio.
-
-## Funcionalidades
-
-### Home Page
-- Hero section con branding de PrintWorks
-- Productos destacados (primeros 3 productos)
-- CTA para ver el catálogo completo
-- Navegación intuitiva
-
-### Catálogo
-- Visualización de productos en cards responsive
-- Filtrado por:
-  - Nombre (búsqueda textual)
-  - Precio mínimo
-  - Precio máximo
-  - Ordenamiento (precio ascendente/descendente, nombre A-Z/Z-A)
-- Paginación con navegación entre páginas
-- Estados de carga, error y vacío
-- Responsive design (móvil, tablet, escritorio)
-
-### Detalle de Producto
-- Imagen principal con placeholder CSS (sin emoji)
-- Manejo de error de carga de imagen
-- Información completa del producto
-- Precio formateado en CLP
-- Tags del producto
-- Navegación de breadcrumb
-- Botón para volver al catálogo
-
-### Temas
-- Soporte completo para modo claro y oscuro
-- Switch visual en el navbar (sin emojis)
-- Persistencia en localStorage
-- Variables CSS para consistencia
-- Tema aplicado a: body, navbar, hero, cards, inputs, selects, botones, paginación, mensajes de error, estado vacío, footer, placeholders de imagen
-
-## Testing
-
-### Ejecutar Tests
-
+Para ejecutar la suite completa de pruebas:
 ```bash
-npm test
+npm test -- --run
 ```
 
-### Tests Implementados
+**Estado actual validado:**
+- **13 archivos de prueba** ejecutados exitosamente.
+- **84 pruebas automatizadas** pasando al 100% sin errores.
+- Cobertura completa de:
+  - `cognitoService` (login, signUp, confirmSignUp, resendCode, HMAC SECRET_HASH).
+  - `AuthContext` y `CartContext` (persistencia y estado reactivo).
+  - `orderService` y `productService`.
+  - Componentes de UI: `LoginForm`, `Navbar`, `ProductCard`, `ProductDetail`, `Catalog`, `Home`, `Profile`, `Cart` y utilidades de formato.
 
-- **productService.test.js** - Tests del servicio de productos
-  - Fetch de productos sin parámetros
-  - Fetch con paginación
-  - Fetch con filtros
-  - Fetch de producto por ID
-  - Manejo de errores de API
-  - Manejo de respuestas vacías
+---
 
-- **formatUtils.test.js** - Tests de utilidades de formato
-  - Formato de precios en CLP
-  - Manejo de valores nulos
-  - Manejo de números grandes
-
-- **ProductCard.test.jsx** - Tests del componente de card de producto
-  - Renderizado de información
-  - Renderizado de imágenes
-  - Fallback para imágenes (placeholder CSS)
-  - Manejo de imágenes nulas/vacías
-  - Manejo de error de carga de imagen
-  - Renderizado de tags
-  - Botón de navegación
-
-- **Catalog.test.jsx** - Tests de la página de catálogo
-  - Estado de carga
-  - Visualización de productos
-  - Estado vacío
-  - Estado de error
-  - Aplicación de filtros
-  - Paginación
-
-- **ProductDetail.test.jsx** - Tests de la página de detalle
-  - Estado de carga
-  - Visualización de producto
-  - Estado de error
-  - Producto no encontrado
-  - Manejo de imágenes nulas/vacías
-  - Navegación breadcrumb
-  - Botón de regreso
-
-- **Home.test.jsx** - Tests de la página de inicio
-  - Estado de carga
-  - Sección hero
-  - Productos destacados
-  - Estado vacío
-  - Estado de error
-  - Fetch de 3 productos
-  - Enlace a catálogo completo
-
-## Build
-
-Para crear una versión de producción:
+## 📦 Build para Producción
 
 ```bash
 npm run build
 ```
+Genera los archivos estáticos optimizados en `dist/`, listos para ser desplegados en GitHub Pages o cualquier servidor web estático.
 
-Los archivos optimizados se generarán en el directorio `dist/`.
+---
 
-## Despliegue
+## 📄 Licencia
 
-### GitHub Pages
-
-El proyecto está configurado para desplegarse en GitHub Pages utilizando:
-
-- **Base path:** `/cn1_front_public/`
-- **Router:** HashRouter (compatible con GitHub Pages)
-- **GitHub Actions:** Workflow configurado en `.github/workflows/deploy-pages.yml`
-
-El despliegue consiste en:
-1. Build del proyecto con Vite
-2. Ejecución de tests antes del build
-3. Deploy del directorio `dist/` a GitHub Pages
-4. Inyección de `VITE_API_BASE_URL` desde GitHub Secrets durante el build
-
-**Variables de entorno para producción:**
-- `VITE_API_BASE_URL`: URL de API Gateway (configurada en GitHub Secrets)
-
-## Seguridad
-
-Este frontend es público y **no implementa autenticación**:
-
-- ❌ No almacena credenciales
-- ❌ No incluye secretos
-- ❌ No utiliza Client Secret
-- ❌ No utiliza tokens administrativos
-- ❌ No incluye MSAL/Entra ID
-- ❌ No incluye Cognito
-- ❌ No accede a endpoints `/admin`
-- ❌ No accede directamente a RDS o ECS
-
-**Arquitectura de comunicación:**
-```
-front_cliente → API Gateway → ms_products → products_db
-```
-
-Toda la comunicación ocurre a través de API Gateway utilizando endpoints públicos.
-
-## Integración con ms_products
-
-- **Dependencia:** El frontend depende exclusivamente de la API pública de `cn1_ms_products`
-- **Sin modificaciones:** No se requiere modificar ningún microservicio existente
-- **CORS:** API Gateway debe permitir CORS para el origen donde se publique el frontend
-- **Versión:** Compatible con la versión actual de `cn1_ms_products`
-
-## Limitaciones Actuales
-
-Las siguientes funcionalidades **no están implementadas** en esta etapa:
-
-- ❌ Carrito de compras
-- ❌ Checkout/proceso de compra
-- ❌ Creación de pedidos
-- ❌ Historial de pedidos
-- ❌ Login de clientes
-- ❌ Autenticación (MSAL, Entra ID, Cognito)
-- ❌ Pagos
-- ❌ Comprobante PDF
-- ❌ Panel administrativo
-
-Estas funcionalidades se evaluarán en etapas posteriores.
-
-## Identidad Visual
-
-### Paleta de Colores PrintWorks
-
-- **Primary:** `#606c38` - Verde oliva
-- **Secondary:** `#283618` - Verde oscuro
-- **Background:** `#fefae0` - Crema
-- **Accent:** `#dda15e` - Dorado
-- **Accent Dark:** `#bc6c25` - Naranja oscuro
-
-### Diseño
-
-- Limpio y moderno
-- Responsive design
-- Navegación superior apropiada para clientes
-- Coherente con la identidad PrintWorks
-- No replica el sidebar administrativo
-
-## Criterios de Aceptación
-
-La tarea se considera completada cuando:
-
-1. ✅ El proyecto compila correctamente
-2. ✅ `npm run dev` funciona en puerto 5174
-3. ✅ GET `/api/v1/products` muestra productos reales
-4. ✅ Solo aparecen productos que `ms_products` entrega públicamente
-5. ✅ No existen productos mock en el flujo real
-6. ✅ Se puede abrir el detalle de un producto
-7. ✅ Las imágenes tienen placeholder CSS (sin emoji)
-8. ✅ Manejo de error de carga de imagen
-9. ✅ Los precios se muestran en CLP
-10. ✅ La paginación funciona
-11. ✅ Los filtros implementados consultan al backend
-12. ✅ La interfaz funciona en móvil y escritorio
-13. ✅ Light/Dark mode funciona correctamente en todos los componentes
-14. ✅ Los estados loading/error/empty funcionan
-15. ✅ `npm test` pasa (todos los tests)
-16. ✅ `npm run build` termina correctamente
-17. ✅ README y `.env.example` están actualizados
-18. ✅ GitHub Actions workflow configurado
-19. ✅ No existe dependencia de autenticación
-20. ✅ No se modificó ningún microservicio
-21. ✅ No se duplican reglas del backend en el frontend
-
-## Licencia
-
-Este proyecto es parte del desarrollo cloud native de PrintWorks.
+Este proyecto forma parte de la solución Cloud Native de **PrintWorks** (Duoc UC).

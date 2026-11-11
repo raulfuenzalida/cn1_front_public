@@ -16,7 +16,23 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorData = null;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+          } else {
+            errorData = await response.text();
+          }
+        } catch {
+          // ignore parsing failure
+        }
+
+        const errorMessage = (errorData && (errorData.message || errorData.error)) || `HTTP error! status: ${response.status}`;
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        error.data = errorData;
+        throw error;
       }
 
       const contentType = response.headers.get('content-type');
@@ -31,26 +47,28 @@ class ApiClient {
     }
   }
 
-  get(endpoint) {
-    return this.request(endpoint, { method: 'GET' });
+  get(endpoint, headers = {}) {
+    return this.request(endpoint, { method: 'GET', headers });
   }
 
-  post(endpoint, data) {
+  post(endpoint, data, headers = {}) {
     return this.request(endpoint, {
       method: 'POST',
+      headers,
       body: JSON.stringify(data),
     });
   }
 
-  put(endpoint, data) {
+  put(endpoint, data, headers = {}) {
     return this.request(endpoint, {
       method: 'PUT',
+      headers,
       body: JSON.stringify(data),
     });
   }
 
-  delete(endpoint) {
-    return this.request(endpoint, { method: 'DELETE' });
+  delete(endpoint, headers = {}) {
+    return this.request(endpoint, { method: 'DELETE', headers });
   }
 }
 

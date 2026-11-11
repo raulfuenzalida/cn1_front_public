@@ -1,10 +1,16 @@
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import AppRoutes from './routes';
 
 function App() {
   return (
     <ThemeProvider>
-      <AppRoutes />
+      <AuthProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,14 +1,33 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice } from '../../utils/formatUtils';
+import { useCart } from '../../context/CartContext';
 
 const ProductCard = ({ product }) => {
   const { id, name, description, finalPrice, tags, images } = product;
+  const [added, setAdded] = useState(false);
+
+  let addToCart = () => {};
+  try {
+    const cart = useCart();
+    if (cart?.addToCart) {
+      addToCart = cart.addToCart;
+    }
+  } catch {
+    // Fallback si se renderiza fuera de CartProvider en tests unitarios
+  }
 
   const displayImage = images && images.length > 0 ? images[0] : null;
 
   const handleImageError = (e) => {
     e.target.style.display = 'none';
     e.target.nextElementSibling.style.display = 'flex';
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product, 1);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   return (
@@ -77,9 +96,20 @@ const ProductCard = ({ product }) => {
           ))}
         </div>
         <p className="price">{formatPrice(finalPrice)}</p>
-        <Link to={`/products/${id}`} className="btn btn-primary mt-auto">
-          Ver producto
-        </Link>
+        <div className="d-flex gap-2 mt-auto">
+          <Link to={`/products/${id}`} className="btn btn-outline-primary flex-grow-1">
+            Ver producto
+          </Link>
+          <button
+            type="button"
+            className={`btn ${added ? 'btn-success' : 'btn-primary'}`}
+            onClick={handleAddToCart}
+            aria-label={`Agregar ${name} al carrito`}
+            title="Agregar al carrito"
+          >
+            {added ? '¡Agregado!' : 'Agregar'}
+          </button>
+        </div>
       </div>
     </div>
   );
