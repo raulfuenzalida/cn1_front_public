@@ -314,7 +314,7 @@ const LoginForm = ({
 
       {/* 1. MODO: LOGIN */}
       {mode === 'login' && (
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} noValidate>
           <div className="mb-3">
             <label htmlFor="login-email" className="form-label small fw-semibold">
               Correo Electrónico:

@@ -31,6 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create .env from secrets (if provided as full file)
+        run: |
+          if [ -n "${{ secrets.DOTENV }}" ]; then
+            echo "${{ secrets.DOTENV }}" > .env
+          elif [ -n "${{ secrets.ENV }}" ]; then
+            echo "${{ secrets.ENV }}" > .env
+          elif [ -n "${{ secrets.ENV_FILE }}" ]; then
+            echo "${{ secrets.ENV_FILE }}" > .env
+          fi
+        shell: bash
+
       - name: Run tests
         run: npm test
 
@@ -43,6 +54,11 @@ jobs:
         run: npm run build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_COGNITO_REGION: ${{ secrets.VITE_COGNITO_REGION }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_CLIENT_ID: ${{ secrets.VITE_COGNITO_CLIENT_ID }}
+          VITE_COGNITO_CLIENT_SECRET: ${{ secrets.VITE_COGNITO_CLIENT_SECRET }}
+          VITE_REQUIRED_ROLE: ${{ secrets.VITE_REQUIRED_ROLE }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

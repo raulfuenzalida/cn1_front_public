@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { productService } from '../services/productService';
 import { apiClient } from '../services/apiClient';
 
-vi.mock('./apiClient', () => ({
+vi.mock('../services/apiClient', () => ({
   apiClient: {
     get: vi.fn(),
   },

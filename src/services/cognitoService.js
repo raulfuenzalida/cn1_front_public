@@ -77,12 +77,6 @@ export const cognitoService = {
       throw error;
     }
 
-    if (!clientId || !region) {
-      const error = new Error('Configuración de AWS Cognito incompleta. Revisa las variables en el archivo .env.');
-      error.type = 'ConfigError';
-      throw error;
-    }
-
     const cleanEmail = email.trim();
 
     const authParameters = {
