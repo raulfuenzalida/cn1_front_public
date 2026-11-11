@@ -82,10 +82,10 @@ VITE_API_BASE_URL=
 
 # Configuración oficial de AWS Cognito:
 VITE_COGNITO_REGION=us-east-1
-VITE_COGNITO_USER_POOL_ID=us-east-1_KtdUxURf6
-VITE_COGNITO_CLIENT_ID=5r7v7nnaqhkjp8gs5muaovked2
-VITE_COGNITO_CLIENT_SECRET=1920g08dn6g6p6bnfe4ol7iqrvkjd55a57aotsqctnmhltkhid4n
-VITE_REQUIRED_ROLE=usuarios
+VITE_COGNITO_USER_POOL_ID=
+VITE_COGNITO_CLIENT_ID=
+VITE_COGNITO_CLIENT_SECRET=
+VITE_REQUIRED_ROLE=
 ```
 
 ### 3. Iniciar el servidor de desarrollo:
